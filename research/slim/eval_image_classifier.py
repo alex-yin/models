@@ -178,6 +178,10 @@ def main(_):
 
     tf.logging.info('Evaluating %s' % checkpoint_path)
 
+    from tensorflow.python.client import device_lib
+    device_lib.list_local_devices()
+    print(tf.get_default_graph().get_operations())
+
     slim.evaluation.evaluate_once(
         master=FLAGS.master,
         checkpoint_path=checkpoint_path,
