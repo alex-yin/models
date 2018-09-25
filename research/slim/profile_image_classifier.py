@@ -179,31 +179,47 @@ def main(_):
     else:
       checkpoint_path = FLAGS.checkpoint_path
 
-    tf.logging.info('Evaluating %s' % checkpoint_path)
+    tf.logging.info('Profiling %s' % checkpoint_path)
 
-    from tensorflow.python.client import device_lib
+    import time
     import numpy as np
+    from tensorflow.python.client import device_lib
     device_lib.list_local_devices()
 
     graph = tf.get_default_graph()
     (d1,d2,d3,d4) = images.shape
     with tf.Session(graph = graph) as sess:
         sess.run(tf.global_variables_initializer())
-        profiler = tf.profiler.Profiler(graph)
         options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_meta = tf.RunMetadata()
-        print(sess.run(predictions,
-            options=options,
-            run_metadata=run_meta,
-            feed_dict={images: np.random.rand(d1,d2,d3,d4)}))
 
-        profiler.add_step(1, run_meta)
-        option_builder = tf.profiler.ProfileOptionBuilder
-        opts = (option_builder(option_builder.time_and_memory()).
-               with_step(-1).
-               with_stdout_output().
-               build())
-        profiler.profile_operations(options=opts)
+        measures = []
+        for i in range(50):
+            start_time = time.time()
+            sess.run(predictions,
+                options=options,
+                run_metadata=run_meta,
+                feed_dict={images: np.random.rand(d1,d2,d3,d4)})
+            measures.append((time.time()-start_time) / FLAGS.batch_size)
+        measures = np.sort(measures)
+        avg_latency = np.sum(measures[:-3]) / len(measures[:-3])
+        print(avg_latency)
+
+        '''profile on operation level'''
+        # profiler = tf.profiler.Profiler(graph)
+        # options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        # run_meta = tf.RunMetadata()
+        # sess.run(predictions,
+        #     options=options,
+        #     run_metadata=run_meta,
+        #     feed_dict={images: np.random.rand(d1,d2,d3,d4)})
+        # profiler.add_step(1, run_meta)
+        # option_builder = tf.profiler.ProfileOptionBuilder
+        # opts = (option_builder(option_builder.time_and_memory()).
+        #        with_step(-1).
+        #        with_stdout_output().
+        #        build())
+        # profiler.profile_operations(options=opts)
 
 if __name__ == '__main__':
   tf.app.run()
