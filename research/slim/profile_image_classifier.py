@@ -28,6 +28,9 @@ from preprocessing import preprocessing_factory
 slim = tf.contrib.slim
 
 tf.app.flags.DEFINE_integer(
+    'num_repeat', 25, 'The number of times to run latency measurement.')
+
+tf.app.flags.DEFINE_integer(
     'batch_size', 100, 'The number of samples in each batch.')
 
 tf.app.flags.DEFINE_integer(
@@ -184,7 +187,10 @@ def main(_):
     import time
     import numpy as np
     from tensorflow.python.client import device_lib
-    device_lib.list_local_devices()
+    local_device_protos = device_lib.list_local_devices()
+    for x in local_device_protos:
+        if x.device_type == 'GPU':
+            gpu_name = x.physical_device_desc
 
     graph = tf.get_default_graph()
     (d1,d2,d3,d4) = images.shape
@@ -194,7 +200,8 @@ def main(_):
         run_meta = tf.RunMetadata()
 
         measures = []
-        for i in range(50):
+        num_repeat = FLAGS.num_repeat
+        for i in range(num_repeat):
             start_time = time.time()
             sess.run(predictions,
                 options=options,
@@ -202,8 +209,10 @@ def main(_):
                 feed_dict={images: np.random.rand(d1,d2,d3,d4)})
             measures.append((time.time()-start_time) / FLAGS.batch_size)
         measures = np.sort(measures)
-        avg_latency = np.sum(measures[:-3]) / len(measures[:-3])
-        print(avg_latency)
+        measures = measures[:-1]
+        avg_latency = np.sum(measures) / len(measures)
+        std_dev = np.std(measures)
+
 
         '''profile on operation level'''
         # profiler = tf.profiler.Profiler(graph)
@@ -220,6 +229,15 @@ def main(_):
         #        with_stdout_output().
         #        build())
         # profiler.profile_operations(options=opts)
+
+    with open(FLAGS.output_file,'w+') as file:
+        file.write('gpu: ' + gpu_name)
+        file.write('\nmodel name: ' + FLAGS.model_name)
+        file.write('\nnumber of samples: ' + str(FLAGS.num_repeat))
+        file.write('\nbatchsize: ' + str(FLAGS.batch_size))
+        file.write('\naverage latency per frame: ' + str(avg_latency))
+        file.write('\nstandard deviation of sample: ' + str(std_dev))
+        file.close()
 
 if __name__ == '__main__':
   tf.app.run()
