@@ -199,6 +199,11 @@ def main(_):
         options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_meta = tf.RunMetadata()
 
+        sess.run(predictions,
+            options=options,
+            run_metadata=run_meta,
+            feed_dict={images: np.random.rand(d1,d2,d3,d4)})
+
         measures = []
         num_repeat = FLAGS.num_repeat
         for i in range(num_repeat):
@@ -209,7 +214,6 @@ def main(_):
                 feed_dict={images: np.random.rand(d1,d2,d3,d4)})
             measures.append((time.time()-start_time) / FLAGS.batch_size)
         measures = np.sort(measures)
-        measures = measures[:-1]
         avg_latency = np.sum(measures) / len(measures)
         std_dev = np.std(measures)
 
