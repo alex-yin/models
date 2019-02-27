@@ -23,13 +23,17 @@ from datasets import flowers
 from datasets import imagenet
 from datasets import mnist
 from datasets import cats_and_dogs
+from datasets import svhn
+from datasets import gtsrb
 
 datasets_map = {
     'cifar10': cifar10,
     'flowers': flowers,
     'imagenet': imagenet,
     'mnist': mnist,
-    'cats_and_dogs': cats_and_dogs
+    'cats_and_dogs': cats_and_dogs,
+    'svhn': svhn,
+    'gtsrb': gtsrb
 }
 
 

@@ -40,6 +40,8 @@ from datasets import download_and_convert_cifar10
 from datasets import download_and_convert_flowers
 from datasets import download_and_convert_mnist
 from datasets import convert_cats_and_dogs
+from datasets import convert_svhn
+from datasets import convert_gtsrb
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -68,6 +70,10 @@ def main(_):
     download_and_convert_mnist.run(FLAGS.dataset_dir)
   elif FLAGS.dataset_name == 'cats_and_dogs':
     convert_cats_and_dogs.run(FLAGS.dataset_dir)
+  elif FLAGS.dataset_name == 'svhn':
+    convert_svhn.run(FLAGS.dataset_dir)
+  elif FLAGS.dataset_name == 'gtsrb':
+    convert_gtsrb.run(FLAGS.dataset_dir)
   else:
     raise ValueError(
         'dataset_name [%s] was not recognized.' % FLAGS.dataset_name)
