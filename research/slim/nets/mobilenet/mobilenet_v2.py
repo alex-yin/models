@@ -176,6 +176,8 @@ def wrapped_partial(func, *args, **kwargs):
 # 'finegrain_classification_mode' is set to True, which means the embedding
 # layer will not be shrinked when given a depth-multiplier < 1.0.
 mobilenet_v2_140 = wrapped_partial(mobilenet, depth_multiplier=1.4)
+mobilenet_v2_075 = wrapped_partial(mobilenet, depth_multiplier=0.75,
+                                   finegrain_classification_mode=True)
 mobilenet_v2_050 = wrapped_partial(mobilenet, depth_multiplier=0.50,
                                    finegrain_classification_mode=True)
 mobilenet_v2_035 = wrapped_partial(mobilenet, depth_multiplier=0.35,
