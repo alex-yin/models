@@ -118,23 +118,38 @@ def _add_to_tfrecord(data_filename, labels_filename, num_images,
     num_images: The number of images in the dataset.
     tfrecord_writer: The TFRecord writer to use for writing.
   """
-  images = _extract_images(data_filename, num_images)
-  labels = _extract_labels(labels_filename, num_images)
+  mat = scipy.io.loadmat(data_filename)
+  images = np.uint8(np.array(mat["X"]))
+  images = np.swapaxes(images, 0, 3)
+  images = np.swapaxes(images, 1, 3)
+  images = np.swapaxes(images, 2, 3)
+  labels = np.array(mat["y"]).T[0].T
+  labels = labels % 10
+  num_images = labels.shape[0]
+  print(images.shape)
+  print(labels.shape)
 
   shape = (_IMAGE_SIZE, _IMAGE_SIZE, _NUM_CHANNELS)
   with tf.Graph().as_default():
     image = tf.placeholder(dtype=tf.uint8, shape=shape)
     encoded_png = tf.image.encode_png(image)
 
+    import matplotlib.pyplot as plt
     with tf.Session('') as sess:
+
       for j in range(num_images):
         sys.stdout.write('\r>> Converting image %d/%d' % (j + 1, num_images))
         sys.stdout.flush()
+        # print(images[j].shape)
+        # print(labels[j])
+        # plt.imshow(images[j])
+        # plt.show()
 
         png_string = sess.run(encoded_png, feed_dict={image: images[j]})
+        label = labels[j]
 
         example = dataset_utils.image_to_tfexample(
-            png_string, 'png'.encode(), _IMAGE_SIZE, _IMAGE_SIZE, labels[j])
+            png_string, b'png', j, j, label)
         tfrecord_writer.write(example.SerializeToString())
 
 
